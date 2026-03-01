@@ -1,4 +1,5 @@
 #Here is my prototype for mini project 1
+import math
 import pandas as pd
 
 def opening():
@@ -14,7 +15,15 @@ def calculator(pv, intrate, payment, fv, pers):
     """The user will be able to calculate present value, future value, interest, and payment, and term."""
     if fv == 0.0:
         calcfv = (pv*((1+intrate)**pers))+(payment*((((1+intrate)**pers)-1)/intrate))
-        calcint = 100*intrate
+    elif pv == 0.0:
+        calcpv = (fv/(1+(intrate**pers)))
+    elif payment == 0.0:
+        calcpay = ((pv*intrate))/(1-((1+intrate)**(-pers)))
+    elif intrate == 0.0:
+        calcint = ((fv/pv)**(1/pers))-1
+    else:
+        calcper = (math.log(fv/pv))/(math.log(1+intrate))
+     
     print(f"\nPrincipal = {pv}")
     print(f"Interest Rate = {calcint}%")
     print(f"Payment Amount = {payment}")
@@ -55,6 +64,7 @@ def amortization(pv, intrate, payment, fv, pers):
     input("Press enter to return to main menu")
 
 run = 0
+
 #Main Code
 pv = float(input("Insert the principal amount or enter 0: "))
 fv = float(input("Insert the future value of the loan or enter 0: "))
