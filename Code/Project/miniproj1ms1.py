@@ -15,20 +15,30 @@ def calculator(pv, intrate, payment, fv, pers):
     """The user will be able to calculate present value, future value, interest, and payment, and term."""
     if fv == 0.0:
         calcfv = (pv*((1+intrate)**pers))+(payment*((((1+intrate)**pers)-1)/intrate))
-    elif pv == 0.0:
+    else:
+        calcfv = fv
+    if pv == 0.0:
         calcpv = (fv/(1+(intrate**pers)))
-    elif payment == 0.0:
+    else:
+        calcpv = pv
+    if payment == 0.0:
         calcpay = ((pv*intrate))/(1-((1+intrate)**(-pers)))
-    elif intrate == 0.0:
+    else:
+        calcpay = payment
+    if intrate == 0.0:
         calcint = ((fv/pv)**(1/pers))-1
     else:
+        calcint = intrate
+    if pers == 0.0:
         calcper = (math.log(fv/pv))/(math.log(1+intrate))
+    else:
+        calcper = pers
      
-    print(f"\nPrincipal = {pv}")
+    print(f"\nPrincipal = {calcpv}")
     print(f"Interest Rate = {calcint}%")
-    print(f"Payment Amount = {payment}")
+    print(f"Payment Amount = {calcpay}")
     print(f"Future Value = {calcfv}")
-    print(f"Number of periods = {pers}")
+    print(f"Number of periods = {calcper}")
     input("\nPress enter to return to main menu")
 
 def amortization(pv, intrate, payment, fv, pers):
@@ -68,11 +78,11 @@ run = 0
 #Main Code
 pv = float(input("Insert the principal amount or enter 0: "))
 fv = float(input("Insert the future value of the loan or enter 0: "))
-intrate = float(input("Insert the interest rate (as a decimal) or enter 0: "))
+intrate = float(input("Insert the annual interest rate (as a decimal) or enter 0: "))
 payment = float(input("Insert the payment or enter 0: "))
-pers = float(input("Input the length of the loan/investment or enter 0: "))
+periods = float(input("Input the length of the loan/investment or enter 0: "))
 amtcomp = float(input("Insert the number of times compounded in a year: "))
-pers = int(pers*amtcomp)
+pers = int(periods*amtcomp)
 intrate = intrate/amtcomp
 while run != 1:
     choice = opening()
@@ -83,11 +93,11 @@ while run != 1:
     elif choice == "3":
         pv = float(input("Insert the pricipal amount or enter 0: "))
         fv = float(input("Insert the future value of the loan or enter 0: "))
-        intrate = float(input("Insert the interest rate (as a decimal) or enter 0: "))
+        intrate = float(input("Insert the annual interest rate (as a decimal) or enter 0: "))
         payment = float(input("Insert the payment or enter 0: "))
-        pers = float(input("Input the length of the loan/investment or enter 0: "))
+        periods = float(input("Input the length of the loan/investment or enter 0: "))
         amtcomp = float(input("Insert the number of times compounded in a year: "))
-        pers = int(pers*amtcomp)
+        pers = int(periods*amtcomp)
         intrate = intrate/amtcomp
     elif choice == "4":
         run = 1
