@@ -29,13 +29,12 @@ def homescreen(agendalist):
     if len(agendas) == 0:
         print("No agendas currently active\n")
     else:
-        for agenda in range(agendalist):
-            print(agenda)
-            print("\n")
+        for agenda in agendalist:
+            print(agenda+"\n")
     print ("Options:")
     print(" 1. Create New Agenda\n 2. Add item to Agenda\n 3. Edit completion")
     choice = int(input("Insert action by corresponding number: "))
     return choice
 
-agendas = []
+agendas = {"Dictionary Name": None, "Dictionary": None}
 homescreen(agendas)
