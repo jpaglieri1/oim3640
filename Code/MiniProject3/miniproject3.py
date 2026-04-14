@@ -4,7 +4,6 @@ import requests
 ##from flask import Flask
 
 load_dotenv()
-API_KEY = os.getenv('MBTA_API_KEY')
 
 def address():
     TOKEN = os.getenv('MAPBOX_API_KEY')
@@ -21,11 +20,40 @@ def address():
     data = response.json()
     return data['features']
 
-add_data = address()
+def find_station(latitude, longitude):
+    API_KEY = os.getenv('MBTA_API_KEY')
+    
+    url = "https://api-v3.mbta.com/stops"
 
-coordinates = add_data[0]["center"]
+    lat = latitude
+    lon = longitude
+    
+    params = {
+        "filter[latitude]": lat,
+        "filter[longitude]": lon,
+        "filter[radius]": 0.1
+    }
+
+    headers = {
+        "x-api-key": API_KEY
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    data = response.json()
+
+    return(data)
+
+address_data = address()
+coordinates = address_data[0]["center"]
 
 longitude = coordinates[0]
 latitude = coordinates[1]
 
 print(latitude, longitude)
+
+nearest_stations = find_station(latitude, longitude)
+
+print(nearest_stations)
+
+if len(nearest_stations['data']) == 0:
+    print("Too far")
