@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import requests
+import math
 ##from flask import Flask
 
 load_dotenv()
@@ -49,11 +50,15 @@ coordinates = address_data[0]["center"]
 longitude = coordinates[0]
 latitude = coordinates[1]
 
-print(latitude, longitude)
-
 nearest_stations = find_station(latitude, longitude)
+x=0
+mindist = 100
+for station in nearest_stations["data"]:
+    stat_long = nearest_stations["data"][x]["attributes"]["longitude"]
+    stat_lat = nearest_stations["data"][x]["attributes"]["latitude"]
+    dist = math.sqrt(((stat_long-longitude)**2)+((stat_lat-latitude)**2))
+    if mindist > dist:
+        closest_station = (station["attributes"])
+        mindist = dist
+    x += 1
 
-print(nearest_stations)
-
-if len(nearest_stations['data']) == 0:
-    print("Too far")
