@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTA Station Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .filter-container {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+            margin-right: 8px;
+        }
+
+        .checkbox-label {
+            display: inline;
+            margin: 0;
+            color: #555;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .result-item span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success-icon {
+            color: #28a745;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚇 MBTA Station Finder</h1>
+        
+        <form id="stationForm">
+            <div class="form-group">
+                <label for="address">Enter an Address:</label>
+                <input 
+                    type="text" 
+                    id="address" 
+                    name="address" 
+                    placeholder="e.g., 123 Main St, Boston, MA"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Transportation Types:</label>
+                <div class="filter-container">
+                    <div class="filter-option">
+                        <input type="checkbox" id="light_rail" name="route_type" value="0" checked>
+                        <label for="light_rail" class="checkbox-label">🚊 Trolley (Light Rail)</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="subway" name="route_type" value="1" checked>
+                        <label for="subway" class="checkbox-label">🚇 Subway</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="commuter_rail" name="route_type" value="2" checked>
+                        <label for="commuter_rail" class="checkbox-label">🚄 Commuter Rail</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="bus" name="route_type" value="3" checked>
+                        <label for="bus" class="checkbox-label">🚌 Bus</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="ferry" name="route_type" value="4" checked>
+                        <label for="ferry" class="checkbox-label">⛴️ Ferry</label>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit">Find Nearest Station</button>
+        </form>
+
+        <div class="loading" id="loading">
+            ⏳ Searching for nearest station...
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <h2>✓ Nearest Station Found!</h2>
+            <div class="result-item">
+                <strong><span class="success-icon">📍</span>Station Name:</strong>
+                <span id="stationName"></span>
+            </div>
+            <div class="result-item">
+                <strong>📍 Municipality:</strong>
+                <span id="municipality"></span>
+            </div>
+            <div class="result-item">
+                <strong>📍 Coordinates:</strong>
+                <span id="coordinates"></span>
+            </div>
+            <div class="result-item">
+                <strong>🏘️ Your Address:</strong>
+                <span id="inputAddress"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('stationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const address = document.getElementById('address').value;
+            
+            // Get selected transportation types
+            const routeTypeCheckboxes = document.querySelectorAll('input[name="route_type"]:checked');
+            const routeTypes = Array.from(routeTypeCheckboxes).map(checkbox => parseInt(checkbox.value));
+            
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const results = document.getElementById('results');
+            
+            // Reset UI
+            loading.style.display = 'block';
+            error.classList.remove('show');
+            results.classList.remove('show');
+            
+            try {
+                const response = await fetch('/find-station', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        address,
+                        route_types: routeTypes
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('stationName').textContent = data.station.name;
+                    document.getElementById('municipality').textContent = data.station.municipality;
+                    document.getElementById('coordinates').textContent = 
+                        `${data.station.latitude.toFixed(4)}, ${data.station.longitude.toFixed(4)}`;
+                    document.getElementById('inputAddress').textContent = data.input_address;
+                    
+                    results.classList.add('show');
+                } else {
+                    showError(data.error || 'An error occurred');
+                }
+            } catch (err) {
+                showError('Failed to connect to server: ' + err.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+        
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = '❌ ' + message;
+            error.classList.add('show');
+        }
+    </script>
+</body>
+</html>

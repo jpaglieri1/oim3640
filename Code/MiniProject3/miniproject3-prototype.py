@@ -6,6 +6,13 @@ import math
 
 load_dotenv()
 
+def filters():
+    transport_types = [0, 1, 2, 3, 4]
+    print("1. Trolley (Green Line) \n2. Subway (Red/Orange/Blue Lines)\n3. Commuter Rail\n4. Bus\n5. Ferry")
+    remove_type = (int(input("Input option to be removed (by number): ")))-1
+    transport_types.remove(remove_type)
+    print(transport_types)
+
 def address():
     TOKEN = os.getenv('MAPBOX_API_KEY')
 
@@ -32,7 +39,7 @@ def find_station(latitude, longitude):
     params = {
         "filter[latitude]": lat,
         "filter[longitude]": lon,
-        "filter[radius]": 0.1
+        "filter[radius]": 100
     }
 
     headers = {
@@ -62,3 +69,6 @@ for station in nearest_stations["data"]:
         mindist = dist
     x += 1
 
+print(closest_station)
+print("Name:", closest_station["name"])
+print("Municipality:", closest_station["municipality"])
