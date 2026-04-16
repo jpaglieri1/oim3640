@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Study Game - Play{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>🎮 Study Game</h1>
+    <p>Guess the Password</p>
+</div>
+
+<div id="alertContainer"></div>
+
+<div class="game-section">
+    <div class="stats">
+        <div class="stat-box">
+            <div class="label">Correct Answers</div>
+            <div class="value" id="correctAnswers">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="label">Password Progress</div>
+            <div class="value" id="passwordProgress">0%</div>
+        </div>
+    </div>
+
+    <div class="password-display" id="passwordDisplay">_ _ _ _ _ _</div>
+
+    <div class="guessed-letters">
+        <strong>Guessed Letters:</strong>
+        <div class="letters" id="guessedLettersList">
+            <span style="color: #999;">None yet</span>
+        </div>
+    </div>
+</div>
+
+<div id="gameContent">
+    <!-- Question or letter guessing will be here -->
+</div>
+
+<div class="button-group">
+    <button onclick="newGame()" class="button-secondary">New Game</button>
+    <button onclick="goHome()" class="button-secondary">Home</button>
+</div>
+
+<script>
+    let currentState = 'question'; // 'question' or 'guessing'
+    let currentQuestion = null;
+    let currentAnswer = null;
+    let passwordLength = 0;
+
+    function showAlert(message, type = 'info') {
+        const alertContainer = document.getElementById('alertContainer');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        alertContainer.insertBefore(alert, alertContainer.firstChild);
+        setTimeout(() => alert.remove(), 4000);
+    }
+
+    function loadQuestion() {
+        fetch('/get-question')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentQuestion = data.question;
+                    currentAnswer = null; // We don't show the answer
+                    
+                    document.getElementById('correctAnswers').textContent = data.correct_answers;
+                    document.getElementById('passwordDisplay').textContent = data.password_display;
+                    
+                    // Update password progress
+                    const revealed = data.password_display.replace(/ /g, '').replace(/_/g, '').length;
+                    const total = data.password_display.replace(/ /g, '').length;
+                    const progress = Math.round((revealed / total) * 100);
+                    document.getElementById('passwordProgress').textContent = progress + '%';
+                    
+                    // Update guessed letters
+                    if (data.guessed_letters.length > 0) {
+                        document.getElementById('guessedLettersList').innerHTML = 
+                            data.guessed_letters.map(l => `<span class="letter-badge">${l}</span>`).join('');
+                    } else {
+                        document.getElementById('guessedLettersList').innerHTML = 
+                            '<span style="color: #999;">None yet</span>';
+                    }
+                    
+                    displayQuestion(data.question, data.question_number);
+                    currentState = 'question';
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            })
+            .catch(error => showAlert('Error loading question: ' + error, 'error'));
+    }
+
+    function displayQuestion(question, questionNumber) {
+        const gameContent = document.getElementById('gameContent');
+        gameContent.innerHTML = `
+            <div class="question-display">
+                <div class="question-number">Question ${questionNumber}</div>
+                <div class="question-text">${question}</div>
+                <div class="answer-input-group">
+                    <input type="text" id="answerInput" placeholder="Your answer..." autofocus />
+                    <button onclick="submitAnswer()">Submit</button>
+                </div>
+            </div>
+        `;
+        
+        // Allow Enter key to submit
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') submitAnswer();
+        });
+    }
+
+    function submitAnswer() {
+        const answerInput = document.getElementById('answerInput');
+        const answer = answerInput.value.trim();
+        
+        if (!answer) {
+            showAlert('Please enter an answer', 'error');
+            return;
+        }
+
+        answerInput.disabled = true;
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner"></span>Checking...';
+
+        fetch('/submit-answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answer: answer })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.correct) {
+                    showAlert(data.message, 'success');
+                    currentState = 'guessing';
+                    displayLetterGuessing();
+                } else {
+                    showAlert(data.message, 'error');
+                    setTimeout(() => {
+                        loadQuestion();
+                    }, 2000);
+                }
+            } else {
+                showAlert(data.message, 'error');
+                answerInput.disabled = false;
+                button.disabled = false;
+                button.innerHTML = 'Submit';
+            }
+        })
+        .catch(error => {
+            showAlert('Error submitting answer: ' + error, 'error');
+            answerInput.disabled = false;
+            button.disabled = false;
+            button.innerHTML = 'Submit';
+        });
+    }
+
+    function displayLetterGuessing() {
+        const gameContent = document.getElementById('gameContent');
+        gameContent.innerHTML = `
+            <div class="game-section">
+                <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                    Guess a letter to reveal part of the password!
+                </p>
+                <div class="letter-input-group">
+                    <input type="text" id="letterInput" maxlength="1" placeholder="A" autofocus />
+                    <button onclick="guessLetter()">Guess</button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('letterInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') guessLetter();
+        });
+    }
+
+    function guessLetter() {
+        const letterInput = document.getElementById('letterInput');
+        const letter = letterInput.value.trim().toUpperCase();
+        
+        if (!letter || !/^[A-Z]$/.test(letter)) {
+            showAlert('Please enter a single letter (A-Z)', 'error');
+            return;
+        }
+
+        letterInput.disabled = true;
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner"></span>Guessing...';
+
+        fetch('/guess-letter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ letter: letter })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message, data.letter_found ? 'success' : 'error');
+                
+                document.getElementById('correctAnswers').textContent = data.correct_answers;
+                document.getElementById('passwordDisplay').textContent = data.password_display;
+                
+                // Update guessed letters
+                if (data.guessed_letters.length > 0) {
+                    document.getElementById('guessedLettersList').innerHTML = 
+                        data.guessed_letters.map(l => `<span class="letter-badge">${l}</span>`).join('');
+                }
+                
+                if (data.game_won) {
+                    setTimeout(() => {
+                        document.getElementById('gameContent').innerHTML = `
+                            <div class="game-section" style="text-align: center; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                                <h2 style="font-size: 2.5em; margin-bottom: 20px;">🎉 YOU WON! 🎉</h2>
+                                <p style="font-size: 1.2em; margin-bottom: 20px;">You answered ${data.correct_answers} questions correctly!</p>
+                                <p style="font-size: 1.1em;">The password was: <strong>${data.password_display.replace(/ /g, '')}</strong></p>
+                            </div>
+                        `;
+                    }, 500);
+                } else {
+                    setTimeout(() => {
+                        loadQuestion();
+                    }, 1500);
+                }
+            } else {
+                showAlert(data.message, 'error');
+                letterInput.disabled = false;
+                button.disabled = false;
+                button.innerHTML = 'Guess';
+            }
+        })
+        .catch(error => {
+            showAlert('Error guessing letter: ' + error, 'error');
+            letterInput.disabled = false;
+            button.disabled = false;
+            button.innerHTML = 'Guess';
+        });
+    }
+
+    function newGame() {
+        if (confirm('Start a new game with a new password? Your current progress will be reset.')) {
+            fetch('/new-game', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('New game started! New password generated.', 'success');
+                    loadQuestion();
+                } else {
+                    showAlert(data.message || 'Error starting new game', 'error');
+                }
+            })
+            .catch(error => showAlert('Error: ' + error, 'error'));
+        }
+    }
+
+    function goHome() {
+        window.location.href = '/';
+    }
+
+    // Load first question on page load
+    window.addEventListener('load', function() {
+        loadQuestion();
+    });
+</script>
+{% endblock %}

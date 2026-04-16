@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Study Game - Add Materials{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>📚 Study Game</h1>
+    <p>Guess the Password • Learn as You Play</p>
+</div>
+
+<div id="alertContainer"></div>
+
+<div class="tabs">
+    <button class="tab active" onclick="switchTab(event, 'upload-tab')">Upload File</button>
+    <button class="tab" onclick="switchTab(event, 'text-tab')">Enter Text</button>
+</div>
+
+<div id="upload-tab" class="tab-content active">
+    <div class="form-group">
+        <label for="fileInput">Upload Study Material (DOCX or TXT)</label>
+        <input type="file" id="fileInput" accept=".docx,.txt" />
+    </div>
+    <button onclick="uploadFile()">Upload Material</button>
+</div>
+
+<div id="text-tab" class="tab-content">
+    <div class="form-group">
+        <label for="textInput">Enter Study Material</label>
+        <textarea id="textInput" placeholder="Paste or type your study material here..."></textarea>
+    </div>
+    <button onclick="uploadText()">Add Material</button>
+</div>
+
+<div class="stats" id="statsContainer" style="display: none; margin-top: 30px;">
+    <div class="stat-box">
+        <div class="label">Materials Added</div>
+        <div class="value" id="materialsCount">0</div>
+    </div>
+    <div class="stat-box">
+        <div class="label">Total Characters</div>
+        <div class="value" id="totalCharacters">0</div>
+    </div>
+</div>
+
+<div id="materialsDisplay" class="materials-list" style="display: none; margin-top: 30px;">
+    <h3>📄 Added Materials:</h3>
+    <div id="materialsList"></div>
+</div>
+
+<div class="button-group" id="actionsGroup" style="display: none; margin-top: 30px;">
+    <button onclick="startGame()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+        ▶️ Start Game
+    </button>
+    <button onclick="clearMaterials()" class="button-secondary">Clear All</button>
+</div>
+
+<script>
+    function switchTab(event, tabName) {
+        // Hide all tabs
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        
+        // Remove active from all buttons
+        const buttons = document.querySelectorAll('.tab');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        // Show selected tab
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    function showAlert(message, type = 'success') {
+        const alertContainer = document.getElementById('alertContainer');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        alertContainer.appendChild(alert);
+        setTimeout(() => alert.remove(), 5000);
+    }
+
+    function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            showAlert('Please select a file', 'error');
+            return;
+        }
+
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner"></span>Uploading...';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            button.disabled = false;
+            button.innerHTML = 'Upload Material';
+            if (data.success) {
+                showAlert(data.message, 'success');
+                fileInput.value = '';
+                updateMaterialsDisplay(data.materials_count, data.total_characters, data.material_names);
+            } else {
+                showAlert(data.message || 'Upload failed', 'error');
+            }
+        })
+        .catch(error => {
+            button.disabled = false;
+            button.innerHTML = 'Upload Material';
+            console.error('Upload error:', error);
+            showAlert('Error uploading file: ' + error, 'error');
+        });
+    }
+
+    function uploadText() {
+        const textInput = document.getElementById('textInput');
+        const text = textInput.value.trim();
+        
+        if (!text) {
+            showAlert('Please enter some material', 'error');
+            return;
+        }
+
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner"></span>Adding...';
+
+        const formData = new FormData();
+        formData.append('text', text);
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            button.disabled = false;
+            button.innerHTML = 'Add Material';
+            if (data.success) {
+                showAlert(data.message, 'success');
+                textInput.value = '';
+                updateMaterialsDisplay(data.materials_count, data.total_characters, data.material_names);
+            } else {
+                showAlert(data.message || 'Failed to add material', 'error');
+            }
+        })
+        .catch(error => {
+            button.disabled = false;
+            button.innerHTML = 'Add Material';
+            console.error('Upload error:', error);
+            showAlert('Error adding text: ' + error, 'error');
+        });
+    }
+
+    function updateMaterialsDisplay(count, totalChars, materialNames = []) {
+        if (count > 0 && totalChars > 0) {
+            document.getElementById('statsContainer').style.display = 'grid';
+            document.getElementById('materialsDisplay').style.display = 'block';
+            document.getElementById('actionsGroup').style.display = 'flex';
+            document.getElementById('materialsCount').textContent = count;
+            document.getElementById('totalCharacters').textContent = totalChars.toLocaleString();
+            
+            // Display material names
+            const materialsList = document.getElementById('materialsList');
+            if (materialNames && materialNames.length > 0) {
+                materialsList.innerHTML = materialNames
+                    .map((name, idx) => `<div class="material-item">• ${name}</div>`)
+                    .join('');
+            } else {
+                materialsList.innerHTML = '<div class="material-item">• Pasted Text</div>';
+            }
+        }
+    }
+
+    function startGame() {
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner"></span>Generating game...';
+
+        fetch('/start-game', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/game';
+            } else {
+                showAlert(data.message, 'error');
+                button.disabled = false;
+                button.innerHTML = '▶️ Start Game';
+            }
+        })
+        .catch(error => {
+            showAlert('Error starting game: ' + error, 'error');
+            button.disabled = false;
+            button.innerHTML = '▶️ Start Game';
+        });
+    }
+
+    function clearMaterials() {
+        if (confirm('Are you sure you want to clear all materials?')) {
+            fetch('/clear-materials', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', function() {
+        // Check if there are existing materials
+        fetch('/get-materials')
+            .then(response => response.json())
+            .then(data => {
+                if (data.count > 0) {
+                    updateMaterialsDisplay(data.count, data.total_characters, data.material_names);
+                }
+            })
+            .catch(err => console.log('Could not fetch materials:', err));
+    });
+</script>
+{% endblock %}
