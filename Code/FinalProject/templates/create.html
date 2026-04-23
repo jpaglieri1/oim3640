@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Create Agenda{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">➕ Create New Agenda</h2>
+<form method="post" class="mb-4">
+    <div class="mb-3">
+        <label for="format" class="form-label">Choose Format:</label>
+        <select name="format" id="format" class="form-select" onchange="toggleOther()">
+            <option value="School">📚 School</option>
+            <option value="Work">💼 Work</option>
+            <option value="Personal">🏠 Personal</option>
+            <option value="Other">🔧 Other</option>
+        </select>
+    </div>
+    <div id="otherFields" style="display: none;">
+        <div class="mb-3">
+            <label for="columns" class="form-label">Column Names (comma-separated):</label>
+            <input type="text" name="columns" id="columns" class="form-control" placeholder="e.g., Task Name, Priority, Due Date, % Complete">
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="name" class="form-label">Agenda Name:</label>
+        <input type="text" name="name" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-custom">Create Agenda</button>
+</form>
+
+<script>
+function toggleOther() {
+    const format = document.getElementById('format').value;
+    const otherFields = document.getElementById('otherFields');
+    if (format === 'Other') {
+        otherFields.style.display = 'block';
+    } else {
+        otherFields.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

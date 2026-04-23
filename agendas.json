@@ -1,0 +1,27 @@
+{
+    "School": {
+        "keys": [
+            "Task Name",
+            "% Complete"
+        ],
+        "items": []
+    },
+    "Work": {
+        "keys": [
+            "Date",
+            "Time",
+            "Task Name",
+            "Location",
+            "% Complete"
+        ],
+        "items": []
+    },
+    "Personal": {
+        "keys": [
+            "Task Name",
+            "Time",
+            "% Complete"
+        ],
+        "items": []
+    }
+}
