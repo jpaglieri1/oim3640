@@ -97,5 +97,24 @@ def edit(agenda_name, item_index):
     item_str = ", ".join(f"{k}: {v}" for k, v in item.items())
     return render_template('edit.html', agenda_name=agenda_name, item_str=item_str, keys=keys, item=item)
 
+@app.route('/delete/<agenda_name>', methods=['POST'])
+def delete_agenda(agenda_name):
+    if agenda_name not in agendas:
+        return "Agenda not found", 404
+    del agendas[agenda_name]
+    save_agendas(agendas)
+    return redirect(url_for('home'))
+
+@app.route('/delete/<agenda_name>/<int:item_index>', methods=['POST'])
+def delete_item(agenda_name, item_index):
+    if agenda_name not in agendas:
+        return "Agenda not found", 404
+    items = agendas[agenda_name]["items"]
+    if item_index < 0 or item_index >= len(items):
+        return "Item not found", 404
+    del items[item_index]
+    save_agendas(agendas)
+    return redirect(url_for('view', agenda_name=agenda_name))
+
 if __name__ == '__main__':
     app.run(debug=True)
