@@ -17,7 +17,15 @@
     <div id="otherFields" style="display: none;">
         <div class="mb-3">
             <label for="columns" class="form-label">Column Names (comma-separated):</label>
-            <input type="text" name="columns" id="columns" class="form-control" placeholder="e.g., Task Name, Priority, Due Date, % Complete">
+            <input type="text" name="columns" id="columns" class="form-control" placeholder="e.g., Task Name, Priority, Location">
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" name="include_dates" id="include_dates" class="form-check-input" value="1">
+            <label for="include_dates" class="form-check-label">Include date fields</label>
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" name="include_times" id="include_times" class="form-check-input" value="1">
+            <label for="include_times" class="form-check-label">Include time fields</label>
         </div>
     </div>
     <div class="mb-3">

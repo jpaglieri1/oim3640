@@ -12,7 +12,13 @@
     {% for key in keys %}
     <div class="mb-3">
         <label for="{{ key }}" class="form-label">{{ key }}:</label>
+        {% if use_times and 'time' in key.lower() %}
+        <input type="time" name="{{ key }}" class="form-control" value="{{ item.get(key, '') }}" required>
+        {% elif use_dates and 'date' in key.lower() %}
+        <input type="date" name="{{ key }}" class="form-control" value="{{ item.get(key, '') }}" required>
+        {% else %}
         <input type="text" name="{{ key }}" class="form-control" value="{{ item.get(key, '') }}" required>
+        {% endif %}
     </div>
     {% endfor %}
     <button type="submit" class="btn btn-custom">Done</button>
