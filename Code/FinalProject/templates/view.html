@@ -14,10 +14,10 @@
             </tr>
         </thead>
         <tbody>
-            {% for item in items %}
+            {% for entry in items %}
             <tr>
                 {% for key in keys %}
-                <td>{{ item.get(key, '') }}</td>
+                <td>{{ entry["item"].get(key, '') }}</td>
                 {% endfor %}
             </tr>
             {% endfor %}

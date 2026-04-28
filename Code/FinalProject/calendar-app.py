@@ -47,9 +47,23 @@ agendas = load_agendas()
 def home():
     sorted_agendas = {}
     for name, data in agendas.items():
+        # Create sorted items with original index for edit links
+        sorted_items = []
+        for idx, item in enumerate(data["items"]):
+            sorted_items.append({
+                "item": item,
+                "original_index": idx
+            })
+        # Sort by date
+        date_key = get_date_key(data["keys"])
+        if date_key:
+            sorted_items.sort(key=lambda x: x["item"].get(date_key, ''))
+        
         sorted_agendas[name] = {
             "keys": data["keys"],
-            "items": sort_by_date(data["items"], data["keys"])
+            "items": sorted_items,
+            "use_dates": data.get("use_dates", True),
+            "use_times": data.get("use_times", True)
         }
     return render_template('index.html', agendas=sorted_agendas)
 
@@ -110,7 +124,17 @@ def view(agenda_name):
     if agenda_name not in agendas:
         return "Agenda not found", 404
     data = agendas[agenda_name]
-    sorted_items = sort_by_date(data["items"], data["keys"])
+    # Create sorted items with original index
+    sorted_items = []
+    for idx, item in enumerate(data["items"]):
+        sorted_items.append({
+            "item": item,
+            "original_index": idx
+        })
+    # Sort by date
+    date_key = get_date_key(data["keys"])
+    if date_key:
+        sorted_items.sort(key=lambda x: x["item"].get(date_key, ''))
     return render_template('view.html', agenda_name=agenda_name, keys=data["keys"], items=sorted_items)
 
 @app.route('/edit/<agenda_name>/<int:item_index>', methods=['GET', 'POST'])

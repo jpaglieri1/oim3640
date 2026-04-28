@@ -1,1 +1,15 @@
-{}
+{
+    "Coaching Schedule": {
+        "keys": [
+            "Date",
+            "Start Time",
+            "Type",
+            "Opponent",
+            "Location",
+            "% Complete"
+        ],
+        "items": [],
+        "use_dates": true,
+        "use_times": true
+    }
+}
